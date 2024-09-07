@@ -1,39 +1,52 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 # This is your local change
 =======
 # This is the change from the remote main branch
 >>>>>>> main
 =======
-
 =======
-## Foundry
+# EcoSphereDAO
+>>>>>>> 99f7d72 (Initial commit for EcoSphereDAO)
 
-**Foundry is a blazing fast, portable and modular toolkit for Ethereum application development written in Rust.**
+EcoSphereDAO is a decentralized platform for environmental project incubation, impact tracking, and cross-sector partnerships, enhanced with satellite-based verification.
 
-Foundry consists of:
+## Features
 
--   **Forge**: Ethereum testing framework (like Truffle, Hardhat and DappTools).
--   **Cast**: Swiss army knife for interacting with EVM smart contracts, sending transactions and getting chain data.
--   **Anvil**: Local Ethereum node, akin to Ganache, Hardhat Network.
--   **Chisel**: Fast, utilitarian, and verbose solidity REPL.
+- Decentralized Project Incubation with AI-Driven Evaluation
+- Tokenized Volunteer Hours with Localized Impact Tracking
+- Cross-Sector Offset Partnerships with Transparent Supply Chain Tracking
+- Satellite-Based Environmental Monitoring and Verification
+
+## Getting Started
+
+1. Clone the repository
+2. Install dependencies: `npm install`
+3. Compile contracts: `npx hardhat compile`
+4. Run tests: `npx hardhat test`
+5. Deploy contracts: `npx hardhat run scripts/deploy.js`
+6. Start frontend: `cd frontend && npm start`
 
 ## Documentation
 
-https://book.getfoundry.sh/
+See the `docs/` directory for detailed documentation on the project architecture, satellite integration, and API specifications.
 
-## Usage
+## Contributing
 
-### Build
+Please read CONTRIBUTING.md for details on our code of conduct and the process for submitting pull requests.
 
-```shell
-$ forge build
-```
+## License
+
+This project is licensed under the MIT License - see the LICENSE file for details.
+
+## Foundry
 
 ### Test
 
 ```shell
 $ forge test
+<<<<<<< HEAD
 ```
 
 ### Format
@@ -75,3 +88,5 @@ $ cast --help
 ```
 >>>>>>> 64f4d64 (chore: forge init)
 >>>>>>> a9507c0 (chore: forge init)
+=======
+>>>>>>> 99f7d72 (Initial commit for EcoSphereDAO)

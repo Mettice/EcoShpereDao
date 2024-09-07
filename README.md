@@ -1,12 +1,3 @@
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-# This is your local change
-=======
-# This is the change from the remote main branch
->>>>>>> main
-=======
-=======
 # EcoSphereDAO
 >>>>>>> 99f7d72 (Initial commit for EcoSphereDAO)
 

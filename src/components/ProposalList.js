@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+// Add useCallback to the import
+import React, { useState, useEffect, useCallback } from 'react';
 import { ethers } from 'ethers';
 
 function ProposalList({ daoContract, refreshTrigger, quorumVotes }) {
@@ -6,7 +7,8 @@ function ProposalList({ daoContract, refreshTrigger, quorumVotes }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  const fetchProposals = async () => {
+  // Wrap fetchProposals in useCallback
+  const fetchProposals = useCallback(async () => {
     if (!daoContract) return;
 
     setLoading(true);
@@ -31,11 +33,12 @@ function ProposalList({ daoContract, refreshTrigger, quorumVotes }) {
     } finally {
       setLoading(false);
     }
-  };
+  }, [daoContract]); // Add daoContract as a dependency
 
+  // Update the dependency array to include fetchProposals
   useEffect(() => {
     fetchProposals();
-  }, [daoContract, refreshTrigger]);
+  }, [fetchProposals, refreshTrigger]);
 
   const handleVote = async (proposalId) => {
     if (!daoContract) return;
@@ -98,6 +101,7 @@ function ProposalList({ daoContract, refreshTrigger, quorumVotes }) {
     </div>
   );
 }
+
 
 const styles = {
   container: {

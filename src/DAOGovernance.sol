@@ -28,8 +28,12 @@ contract DAOGovernance {
     event ProposalQueued(uint256 proposalId, uint256 executionTime);
     event ProposalExecuted(uint256 indexed proposalId);
 
+
+
+
     constructor(address _ecoTokenAddress) {
         ecoToken = IERC20(_ecoTokenAddress);
+
     }
 
     function submitProposal(string memory description) public {

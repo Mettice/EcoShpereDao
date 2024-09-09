@@ -1,24 +1,28 @@
 import React, { useState, useEffect } from 'react';
 import { ethers } from 'ethers';
 
-function Dashboard({ account, tokenContract, carbonContract }) {
+function Dashboard({ account, tokenContract, esgContract, stakingPower }) {
   const [ecoBalance, setEcoBalance] = useState('0');
-  const [carbonBalance, setCarbonBalance] = useState('0');
+  const [esgBalance, setESGBalance] = useState('0');
+  const [votingPower, setVotingPower] = useState('0');
   const [error, setError] = useState(null);
 
   useEffect(() => {
     const fetchBalances = async () => {
-      if (tokenContract && carbonContract && account) {
+      if (tokenContract && esgContract && account) {
         try {
           console.log("Fetching EcoToken balance...");
           const eco = await tokenContract.balanceOf(account);
           setEcoBalance(ethers.utils.formatEther(eco));
           console.log("EcoToken balance fetched successfully");
 
-          console.log("Fetching Carbon Credit balance...");
-          const carbon = await carbonContract.balanceOf(account);
-          setCarbonBalance(ethers.utils.formatEther(carbon));
-          console.log("Carbon Credit balance fetched successfully");
+          console.log("Fetching ESG Credit balance...");
+          const esg = await esgContract.balanceOf(account, 1); // Assuming ESG Credit has ID 1
+          setESGBalance(esg.toString()); // ESG Credits might not use 18 decimals
+          console.log("ESG Credit balance fetched successfully");
+
+          // Use stakingPower prop directly
+          setVotingPower(ethers.utils.formatEther(stakingPower));
         } catch (error) {
           console.error("Error fetching balances:", error);
           setError("Failed to fetch balances. Please check the console for details.");
@@ -27,7 +31,7 @@ function Dashboard({ account, tokenContract, carbonContract }) {
     };
 
     fetchBalances();
-  }, [account, tokenContract, carbonContract]);
+  }, [account, tokenContract, esgContract, stakingPower]);
 
   if (error) {
     return <div>Error: {error}</div>;
@@ -42,9 +46,14 @@ function Dashboard({ account, tokenContract, carbonContract }) {
           <p>{ecoBalance} ECO</p>
         </div>
         <div style={styles.balance}>
-          <h3>Carbon Credit Balance</h3>
-          <p>{carbonBalance} CC</p>
+          <h3>ESG Credit Balance</h3>
+          <p>{esgBalance} ESG</p>
         </div>
+      </div>
+
+      <div style={styles.votingPower}>
+        <h3>Voting Power</h3>
+        <p>{votingPower} ECO</p>
       </div>
     </div>
   );
@@ -56,10 +65,6 @@ const styles = {
     backgroundColor: 'white',
     borderRadius: '10px',
     boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-  },
-  heading: {
-    color: '#1B5E20',
-    marginBottom: '20px',
   },
   balances: {
     display: 'flex',
@@ -73,18 +78,12 @@ const styles = {
     borderRadius: '5px',
     width: '45%',
   },
-  activity: {
-    backgroundColor: '#E8F5E9',
+  votingPower: {
+    textAlign: 'center',
     padding: '20px',
+    backgroundColor: '#FFEB3B',
     borderRadius: '5px',
-  },
-  activityList: {
-    listStyleType: 'none',
-    padding: 0,
-  },
-  activityItem: {
-    marginBottom: '10px',
-    fontSize: '14px',
+    marginTop: '20px',
   },
 };
 

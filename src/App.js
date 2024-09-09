@@ -20,6 +20,7 @@ function App() {
   const [account, setAccount] = useState(null);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
   const [quorumVotes, setQuorumVotes] = useState(ethers.BigNumber.from(0));
+  const [stakingPower, setStakingPower] = useState(ethers.BigNumber.from(0));
   const [networkError, setNetworkError] = useState(null);
 
   useEffect(() => {
@@ -27,84 +28,71 @@ function App() {
       if (typeof window.ethereum !== 'undefined') {
         try {
           const provider = new ethers.providers.Web3Provider(window.ethereum, "any");
-          console.log("Provider created");
-          
           await provider.send("eth_requestAccounts", []);
-          console.log("Accounts requested");
+          const signer = provider.getSigner();
           
-          const signer = provider.getSigner();  // Declaration here
-          console.log("Signer obtained");
-  
-          const network = await provider.getNetwork();
-          console.log("Connected to network:", network);
-  
-          const blockNumber = await provider.getBlockNumber();
-          console.log("Current block number:", blockNumber);
-    
-          // Check if connected to the correct network
-          if (network.chainId !== 31337) {
-            throw new Error("Please connect to the Anvil network (Chain ID: 31337)");
-          }
-    
-          // Removed redeclaration of `signer` here
-          console.log("Signer obtained");
-          
-          setProvider(provider);
-          setSigner(signer);
+          console.log("Connected to network:", await provider.getNetwork());
+          console.log("Signer address:", await signer.getAddress());
     
           const daoAddress = '0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512';
           const tokenAddress = '0x5FbDB2315678afecb367f032d93F642f64180aa3';
           const esgAddress = '0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0';
     
-          console.log("Creating contract instances...");
+          console.log("DAO Contract address:", daoAddress);
+          console.log("Token Contract address:", tokenAddress);
+          console.log("ESG Contract address:", esgAddress);
+    
           const daoContract = new ethers.Contract(daoAddress, DAOGovernance.abi, signer);
           const tokenContract = new ethers.Contract(tokenAddress, EcoToken.abi, signer);
           const esgContract = new ethers.Contract(esgAddress, ESGCredits.abi, signer);
-          console.log("Contract instances created");
     
+          setProvider(provider);
+          setSigner(signer);
           setDaoContract(daoContract);
           setTokenContract(tokenContract);
           setESGContract(esgContract);
     
           const address = await signer.getAddress();
-          console.log("Connected account:", address);
           setAccount(address);
     
-          // Fetch quorum percentage and calculate quorum votes
-          console.log("Fetching quorum percentage...");
+          console.log("Attempting to get quorum percentage...");
           const quorumPercentage = await daoContract.quorumPercentage();
-          console.log("Quorum percentage:", quorumPercentage.toString());
+          console.log("Quorum Percentage:", quorumPercentage.toString());
     
-          console.log("Fetching total supply...");
           const totalSupply = await tokenContract.totalSupply();
-          console.log("Total supply:", totalSupply.toString());
+          console.log("Total Supply:", totalSupply.toString());
     
           const quorumVotes = totalSupply.mul(quorumPercentage).div(100);
-          console.log("Calculated quorum votes:", quorumVotes.toString());
           setQuorumVotes(quorumVotes);
     
+          // Fetching staking power (voting power)
+          const stakingPower = await tokenContract.balanceOf(address);
+          setStakingPower(stakingPower);
+    
+          // Set up a listener for network changes
           provider.on("network", (newNetwork, oldNetwork) => {
+            console.log("Network changed:", newNetwork.chainId);
             if (oldNetwork) {
-              console.log("Network changed, reloading...");
               window.location.reload();
             }
           });
     
         } catch (error) {
-          console.error("Detailed error:", error);
-          if (error.error && error.error.message) {
-            console.error("Error message:", error.error.message);
-          }
+          console.error("Initialization error:", error);
+          console.error("Error details:", JSON.stringify(error, Object.getOwnPropertyNames(error)));
           setNetworkError(`Failed to connect to the Ethereum network: ${error.message}`);
         }
       } else {
         setNetworkError("No Ethereum wallet detected. Please install MetaMask or another Web3 wallet.");
       }
     };
-  
-    init();
-  }, []);
 
+    init();
+  }, [refreshTrigger]);
+
+  const refreshData = () => {
+    setRefreshTrigger(prev => prev + 1);
+  };
 
   const connectWallet = async () => {
     if (typeof window.ethereum !== 'undefined') {
@@ -113,7 +101,6 @@ function App() {
         const address = await signer.getAddress();
         setAccount(address);
       } catch (error) {
-        console.error('Failed to connect wallet:', error);
         setNetworkError("Failed to connect wallet. Please try again.");
       }
     } else {
@@ -121,8 +108,52 @@ function App() {
     }
   };
 
-  const refreshData = () => {
-    setRefreshTrigger(prev => prev + 1);
+  const verifyProject = async (projectId) => {
+    if (!esgContract) {
+      console.error("ESG contract not initialized");
+      return;
+    }
+
+    try {
+      const tx = await esgContract.verifyProject(projectId);
+      await tx.wait();
+      console.log(`Project ${projectId} verified successfully`);
+      refreshData();
+    } catch (error) {
+      console.error("Error verifying project:", error);
+      if (error.message.includes("OwnableUnauthorizedAccount")) {
+        alert("You are not authorized to verify projects. Please connect with the contract owner's account.");
+      } else {
+        alert(`Failed to verify project: ${error.message}`);
+      }
+    }
+  };
+
+  const mintESGCredits = async (to, projectId, amount, options = {}) => {
+    if (!esgContract) {
+      console.error("ESG contract not initialized");
+      return;
+    }
+
+    try {
+      const isVerified = await esgContract.verifiedProjects(projectId);
+      if (!isVerified) {
+        alert("This project is not verified. Please verify it first.");
+        return;
+      }
+
+      const tx = await esgContract.mint(to, projectId, amount, "0x", options);
+      await tx.wait();
+      console.log(`Minted ${amount} credits for project ${projectId} to ${to}`);
+      refreshData();
+    } catch (error) {
+      console.error("Error minting ESG credits:", error);
+      if (error.message.includes("OwnableUnauthorizedAccount")) {
+        alert("You are not authorized to mint credits. Please connect with the contract owner's account.");
+      } else {
+        alert(`Failed to mint ESG credits: ${error.message}`);
+      }
+    }
   };
 
   if (networkError) {
@@ -145,6 +176,7 @@ function App() {
                 account={account}
                 tokenContract={tokenContract}
                 esgContract={esgContract}
+                stakingPower={stakingPower}
               />
             } />
             <Route path="/proposals" element={
@@ -171,6 +203,8 @@ function App() {
               <ESGMarketplace 
                 esgContract={esgContract}
                 account={account}
+                verifyProject={verifyProject}
+                mintESGCredits={mintESGCredits}
               />
             } />
           </Routes>

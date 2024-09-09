@@ -8,11 +8,11 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3  # Update to v3
+    - uses: actions/checkout@v3  # Ensure v3 is used
     - name: Use Node.js
-      uses: actions/setup-node@v3  # Update to v3
+      uses: actions/setup-node@v3  # Ensure v3 is used
       with:
-        node-version: '16'  # You can also set it to '20' for future-proofing
+        node-version: '16'  # You can set to '16' or '20' for future compatibility
     - run: npm ci
     - run: npm run build
     - name: Deploy to GitHub Pages

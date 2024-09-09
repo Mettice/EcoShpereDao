@@ -29,6 +29,7 @@ const CarbonCreditApp = () => {
     setBalance(balance);
   };
 
+
   const updateProposals = async () => {
     const fetchedProposals = await contractInteractions.getProposals();
     setProposals(fetchedProposals);
@@ -62,6 +63,12 @@ const CarbonCreditApp = () => {
     }
   };
 
+  const owner = await esgContract.getOwner();
+  if (account !== owner) {
+    alert("You are not authorized to perform this action.");
+    return;
+  }
+
   const handleVerifyProject = async () => {
     try {
       await contractInteractions.verifyProject(projectId, account);
@@ -79,6 +86,8 @@ const CarbonCreditApp = () => {
     } catch (error) {
       console.error('Error initiating cross-chain transfer:', error);
     }
+
+
   };
 
   return (

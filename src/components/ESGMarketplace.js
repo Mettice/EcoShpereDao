@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { ethers } from 'ethers';
 
-function ESGMarketplace({ esgContract, account }) {
+function ESGMarketplace({ esgContract, account, verifyProject, mintESGCredits }) {
   const [availableCredits, setAvailableCredits] = useState([]);
   const [buyAmount, setBuyAmount] = useState('');
   const [sellAmount, setSellAmount] = useState('');
+  const [projectIdToVerify, setProjectIdToVerify] = useState('');
 
   useEffect(() => {
     const fetchAvailableCredits = async () => {
@@ -25,9 +26,12 @@ function ESGMarketplace({ esgContract, account }) {
     if (!esgContract || !account) return;
     try {
       const credit = availableCredits.find(c => c.id === creditId);
+      if (!credit) {
+        throw new Error("Credit not found");
+      }
+      const amount = ethers.utils.parseEther(buyAmount);
       const value = ethers.utils.parseEther((credit.price * buyAmount).toString());
-      const tx = await esgContract.mint(creditId, buyAmount, "0x", { value });
-      await tx.wait();
+      await mintESGCredits(account, creditId, amount, { value });
       alert('Purchase successful!');
       setBuyAmount('');
       // Refresh available credits
@@ -51,9 +55,29 @@ function ESGMarketplace({ esgContract, account }) {
     }
   };
 
+  const handleVerifyProject = async () => {
+    if (!projectIdToVerify) {
+      alert('Please enter a project ID to verify.');
+      return;
+    }
+    await verifyProject(projectIdToVerify);
+    setProjectIdToVerify('');
+  };
+
   return (
     <div style={styles.marketplace}>
       <h2 style={styles.heading}>ESG Credit Marketplace</h2>
+      <div style={styles.section}>
+        <h3>Verify Project</h3>
+        <input
+          type="number"
+          value={projectIdToVerify}
+          onChange={(e) => setProjectIdToVerify(e.target.value)}
+          placeholder="Project ID to verify"
+          style={styles.input}
+        />
+        <button onClick={handleVerifyProject} style={styles.button}>Verify Project</button>
+      </div>
       <div style={styles.section}>
         <h3>Available ESG Credits</h3>
         <ul style={styles.creditList}>
@@ -87,7 +111,6 @@ function ESGMarketplace({ esgContract, account }) {
     </div>
   );
 }
-
 
 const styles = {
   marketplace: {
